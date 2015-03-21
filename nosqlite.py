@@ -285,19 +285,19 @@ class Collection(object):
 
     #pandas tables
     #http://stackoverflow.com/a/6027615/454773
-    def _flatten(self, parent_key='', sep='_'):
+    def _flatten(self, d, parent_key='', sep='_'):
         items = []
-        for k, v in self.items():
+        for k, v in d.items():
             new_key = parent_key + sep + k if parent_key else k
             if isinstance(v, collections.MutableMapping):
-                items.extend(flatten(v, new_key, sep=sep).items())
+                items.extend(self._flatten(v, new_key, sep=sep).items())
             else:
                 items.append((new_key, v))
         return dict(items)
     #need an unflatten?
     
     def df(self):
-        return pd.DataFrame( [flatten(x) for x in self.find()] )
+        return pd.DataFrame( [self._flatten(x) for x in self.find()] )
 
     #--TH
     
