@@ -4,6 +4,9 @@ import sqlite3
 import sys
 import warnings
 
+import pandas as pd
+import collections
+
 from functools import partial
 from itertools import starmap
 
@@ -275,7 +278,23 @@ class Collection(object):
 				results.append(projdata)
 		
 		return results
+
+	#pandas tables
+	#http://stackoverflow.com/a/6027615/454773
+	def _flatten(self, parent_key='', sep='_'):
+		items = []
+		for k, v in self.items():
+			new_key = parent_key + sep + k if parent_key else k
+			if isinstance(v, collections.MutableMapping):
+				items.extend(flatten(v, new_key, sep=sep).items())
+			else:
+				items.append((new_key, v))
+		return dict(items)
+	#need an unflatten?
 	
+	def df(self):
+    	return pd.DataFrame( [flatten(x) for x in self.find()] )
+
 	#--TH
 	
     def _apply_query(self, query, document):
