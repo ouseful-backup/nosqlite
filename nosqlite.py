@@ -206,9 +206,13 @@ class Collection(object):
 
 
 	#TH--
-	def findd( self,q={},proj={},verbose=False,full=False ):
+	def findd( self,q=None,proj=None,verbose=False,full=False ):
 		''' Piggbyack on self.find to offer deep search and projection limits on results '''
 		#This should be implemented properly - see the FIX ME - this is just a stopgap
+		
+		q = q or {}
+		proj = proj or {}
+		
 		#--- Deep search ----
 		# So eg allow a search on {'foo.bar':'baz'}
 		q1={}
