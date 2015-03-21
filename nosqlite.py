@@ -200,6 +200,84 @@ class Collection(object):
 
         return results
 
+
+
+	#TH--
+	def findd( self,q={},proj={},verbose=False,full=False ):
+		''' Piggbyack on self.find to offer deep search and projection limits on results '''
+		#This should be implemented properly - see the FIX ME - this is just a stopgap
+		#--- Deep search ----
+		# So eg allow a search on {'foo.bar':'baz'}
+		q1={}
+		qn={}
+		for i in q:
+			if len(i.split('.'))==1:
+				q1[i]=q[i]
+			else: qn[i]=q[i]
+		tmp=self.find(q1)
+		tmp2=[]
+		if len(qn)>0:
+			for tx in tmp:
+				#Check not level 1 queries
+				test=False
+				for i in qn:
+					try:
+						l=i.split('.')
+						tmpx=tx
+						for lx in l:
+							tmpx=tmpx[lx]
+						if tmpx==qn[i]:
+							test=True
+					except KeyError:
+						break
+					else:
+						if test: tmp2.append(tx)
+		else:
+			tmp2=tmp
+	
+		#------ Results projection ---
+		# So eg on {'foo.bar':1} return items foo.bar=*, or foo.bar.* down...
+		if proj=={}:
+			results=tmp2
+		else:
+			results=[]
+			for result in tmp2:
+				projdata={}
+				for p in proj:
+					if proj[p]==1:
+						#We'll use tmpproj to walk into projdata
+						tmpproj=projdata
+						tmpdict=result
+						levels=p.split('.')
+						path=[]
+						for level in levels:
+							path.append(level)
+							#Walk into the result
+							if level in tmpdict:
+								tmpdict=tmpdict[level]
+								if verbose:
+									if level not in tmpproj:
+										#Have we bottomed out in terms of finding atomic values yet?
+										if isinstance(tmpdict, dict):
+											if not full:
+												tmpproj[level]={}
+											elif len(path)<len(levels):
+												tmpproj[level]={}
+											else:
+												tmpproj[level]=tmpdict.copy()
+										else:
+											tmpproj[level]=tmpdict
+									#Move down to the next level of the results tree
+									tmpproj=tmpproj[level]
+								if not isinstance(tmpdict, dict): projdata['_'.join(path)]=tmpdict
+							else:
+								break
+				results.append(projdata)
+		
+		return results
+	
+	#--TH
+	
     def _apply_query(self, query, document):
         """
         Applies a query to a document. Returns True if the document meets the criteria of
